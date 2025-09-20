@@ -1,0 +1,117 @@
+# Python虚拟环境
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 分发/打包
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# 单元测试/覆盖率报告
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# 环境变量
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# 机器学习模型文件
+*.pkl
+*.model
+*.h5
+*.ckpt
+models/
+checkpoints/
+
+# 数据文件
+data/
+dataset/
+*.csv
+*.json
+*.xml
+*.parquet
+*.feather
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
+temp/
+tmp/
+
+# 测试结果和报告
+test_results/
+test_reports/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 机器学习特定
+wandb/
+mlruns/
+.mlflow/
+tensorboard_logs/
