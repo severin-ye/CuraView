@@ -321,8 +321,9 @@ def run_benchmark(model, tokenizer, test_prompts: Optional[List[str]] = None, nu
 def main():
     """主函数"""
     # 模型路径选择 - 暂时使用30B模型测试
-    # model_path = "/home/work/hd/_models/base/Qwen3-4B-Thinking-2507-FP8"
-    model_path = "/home/work/hd/_models/base/Qwen3-30B-A3B-Thinking-2507"
+    # model_path = "/home/work/hd/_models/base/qwen3-4b-thinking"
+    # model_path = "/home/work/hd/_models/base/Qwen3-30B-A3B-Thinking-2507"
+    model_path = "/home/work/hd/_models/base/qwen3-next-80b-instruct"
     
     # 1. 显示GPU信息
     display_gpu_info()
