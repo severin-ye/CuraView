@@ -117,3 +117,7 @@ wandb/
 mlruns/
 .mlflow/
 tensorboard_logs/
+
+# 训练输出目录
+output/
+outputs/
