@@ -195,7 +195,7 @@ class EHRDataProcessor:
         logger.info(f"{table_name} 数据清洗完成")
         return df
     
-    def build_patient_index(self, data: Dict[str, pd.DataFrame]) -> Dict[str, Dict]:
+    def build_patient_index(self, data: Dict[str, pd.DataFrame]) -> tuple[Dict[str, Dict], List[str]]:
         """
         构建患者索引以提高查询效率
         
@@ -208,6 +208,13 @@ class EHRDataProcessor:
         logger.info("正在构建患者索引...")
         
         grouped_data = {}
+        hadm_id_mapping = {}  # 用于映射 hadm_id 到 subject_id
+        
+        # 首先构建 hadm_id 到 subject_id 的映射关系
+        for table_name, df in data.items():
+            if 'subject_id' in df.columns and 'hadm_id' in df.columns:
+                mapping = df[['hadm_id', 'subject_id']].drop_duplicates()
+                hadm_id_mapping.update(mapping.set_index('hadm_id')['subject_id'].to_dict())
         
         for table_name, df in data.items():
             if 'subject_id' in df.columns:
@@ -216,8 +223,20 @@ class EHRDataProcessor:
                     lambda x: x.to_dict(orient='records')
                 ).to_dict()
                 grouped_data[table_name] = grouped
+            elif 'hadm_id' in df.columns:
+                # 对于没有 subject_id 但有 hadm_id 的表（如 discharge_target）
+                logger.info(f"表 {table_name} 没有 subject_id 字段，通过 hadm_id 建立关联")
+                temp_grouped = {}
+                for _, row in df.iterrows():
+                    hadm_id = row['hadm_id']
+                    if hadm_id in hadm_id_mapping:
+                        subject_id = hadm_id_mapping[hadm_id]
+                        if subject_id not in temp_grouped:
+                            temp_grouped[subject_id] = []
+                        temp_grouped[subject_id].append(row.to_dict())
+                grouped_data[table_name] = temp_grouped
             else:
-                logger.warning(f"表 {table_name} 没有 subject_id 字段，跳过分组")
+                logger.warning(f"表 {table_name} 没有 subject_id 或 hadm_id 字段，跳过分组")
                 grouped_data[table_name] = {}
         
         # 获取所有患者ID
@@ -452,7 +471,8 @@ class EHRDataProcessor:
             # 收集该患者在所有表中的数据
             patient_data = {}
             for table_name in self.file_config.keys():
-                patient_data[table_name] = grouped_data[table_name].get(subject_id, [])
+                table_data = grouped_data.get(table_name, {})
+                patient_data[table_name] = table_data.get(subject_id, [])
             
             # 构建患者JSON记录
             patient_record = self.build_patient_json(subject_id, patient_data, i)

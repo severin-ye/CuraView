@@ -10,7 +10,13 @@ python run_ehr_processor.py
 
 import os
 import sys
-from ehr_json_builder.src.ehr_data_processor import EHRDataProcessor
+from pathlib import Path
+
+# 添加 src 目录到 Python 路径
+src_path = Path(__file__).parent.parent / "src"
+sys.path.insert(0, str(src_path))
+
+from ehr_data_processor import EHRDataProcessor
 
 def main():
     """运行 EHR 数据处理示例"""

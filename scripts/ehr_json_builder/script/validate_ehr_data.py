@@ -206,14 +206,30 @@ def export_summary_stats(data: Dict[str, Any], output_path: str):
     df.to_csv(output_path, index=False)
     print(f"✅ 已保存 {len(df)} 条患者统计记录")
 
-def main():
+def main(output_dir=None):
     """主函数"""
+    import argparse
+    
+    # 如果没有传入 output_dir，则使用命令行参数
+    if output_dir is None:
+        parser = argparse.ArgumentParser(description='EHR 数据验证工具')
+        parser.add_argument('--output_dir', type=str, 
+                           default='./output',
+                           help='输出文件目录路径')
+        args = parser.parse_args()
+        output_dir = args.output_dir
+    
     print("=" * 60)
     print("🔍 EHR 数据验证和查看工具")
     print("=" * 60)
     
-    output_dir = "/home/work/hd/output"
     json_file = os.path.join(output_dir, "ehr_dataset_full.json")
+    
+    # 检查文件是否存在
+    if not os.path.exists(json_file):
+        print(f"❌ 错误: 找不到数据文件 - {json_file}")
+        print("💡 请确认数据处理已完成，且输出目录正确")
+        return 1
     
     # 1. 加载和验证 JSON 文件
     data = load_and_validate_json(json_file)
