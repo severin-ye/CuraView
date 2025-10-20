@@ -121,3 +121,9 @@ tensorboard_logs/
 # 训练输出目录
 output/
 outputs/
+
+# 模型检查点和优化器文件
+*.pt
+*.pth
+checkpoint-*/
+optimizer.pt
