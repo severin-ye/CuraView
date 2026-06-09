@@ -2,31 +2,25 @@
 
 **A GraphRAG-Based Framework for Medical AI Hallucination Generation and Detection**
 
-Official research code release for the paper:
-
-> *"CuraView: A GraphRAG-Based Framework for Medical AI Hallucination Generation and Detection"*
-
-[![Paper](https://img.shields.io/badge/Paper-coming%20soon-blue)](#citation)
-[![Code](https://img.shields.io/badge/Code-coming%20soon-orange)](#code-status)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
-[![GraphRAG](https://img.shields.io/badge/GraphRAG-Microsoft-orange)](https://github.com/microsoft/graphrag)
-[![LangChain](https://img.shields.io/badge/LangChain-1.0-purple)](https://www.langchain.com/)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey)](#license)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/)
+[![GraphRAG](https://img.shields.io/badge/GraphRAG-Microsoft-orange.svg)](https://github.com/microsoft/graphrag)
+[![LangChain](https://img.shields.io/badge/LangChain-1.0-purple.svg)](https://www.langchain.com/)
 
 ---
 
 ## Overview
 
-CuraView is a knowledge-based multi-agent framework for sentence-level medical hallucination detection in discharge summaries. It formulates hallucination detection as patient-grounded claim verification using GraphRAG-enhanced evidence retrieval and structured evidence grading (E1--E4).
+**CuraView** is an innovative research platform for medical AI hallucination detection and correction, dedicated to addressing the reliability and safety issues of medical large language model outputs. By building a complete **Hallucination Generation -> Knowledge Graph Construction -> Intelligent Detection -> System Evaluation** pipeline, it provides technical safeguards for the clinical application of medical AI.
 
 ### Key Features
 
-- **Hallucination Generation Agent**: Controlled injection of 7 clinically meaningful hallucination types via LangChain
-- **GraphRAG Knowledge Graph**: Patient-specific knowledge graphs built from heterogeneous EHR sources using Microsoft GraphRAG
-- **Hallucination Detection Agent**: Evidence-grounded sentence-level verification with dual API/local model support
-- **Structured Evidence Grading**: Four-level scheme (E1 strong support, E2 weak support, E3 no support, E4 direct contradiction)
-- **Multi-Agent Curation Pipeline**: Generation--detection--curation workflow for producing quality-filtered training data
-- **EHR Data Processing**: Toolchain for MIMIC-IV discharge-me dataset processing
+- **Hallucination Generation Agent**: Intelligent hallucination rewriting system based on LangChain 1.0, generating 7 types of medical error data
+- **GraphRAG Knowledge Graph**: Medical knowledge graph built on Microsoft GraphRAG, supporting entity relationship extraction and vector retrieval
+- **Hallucination Detection Agent**: Context-enhanced detection system combining GraphRAG, supporting both local model and API dual modes
+- **System Integration & Evaluation**: Complete comparison and verification tools, supporting multi-model performance evaluation and recall analysis
+- **EHR Data Processing**: Efficient electronic health record data processing toolchain, supporting MIMIC-IV dataset
+- **Model Fine-tuning Framework**: Medical domain model adaptation training integrated with MS-SWIFT
 
 ---
 
