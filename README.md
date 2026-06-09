@@ -36,6 +36,16 @@ CuraView is a knowledge-based multi-agent framework for sentence-level medical h
 
 ---
 
+## System Pipeline
+
+The pipeline consists of five core stages:
+
+1. **Evidence preparation**: Patient records are prepared from heterogeneous EHR sources
+2. **Knowledge construction**: GraphRAG builds a patient-specific knowledge graph from multi-table EHR evidence
+3. **Hallucination generation**: The generation agent injects controlled medical errors according to a seven-type clinical taxonomy
+4. **Evidence-grounded detection**: The detection agent verifies each sentence against retrieved graph evidence and assigns one of four evidence grades (E1--E4)
+5. **Data curation**: Quality-filtered supervision for improving local verification models
+
 ---
 
 ## Hallucination Types
@@ -54,10 +64,6 @@ CuraView covers seven clinically meaningful hallucination categories:
 
 ---
 
----
-
----
-
 ## Evidence Grading Scheme
 
 CuraView uses a four-level evidence grading scheme for sentence-level verification:
@@ -68,8 +74,6 @@ CuraView uses a four-level evidence grading scheme for sentence-level verificati
 | **E2** | Weak Support | Partially supported, some ambiguity |
 | **E3** | No Support | No supporting evidence found |
 | **E4** | Direct Contradiction | Directly contradicted by patient EHR evidence |
-
----
 
 ---
 
