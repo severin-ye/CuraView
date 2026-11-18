@@ -2,6 +2,8 @@
 
 CuraView checks each sentence in a discharge summary against evidence from the same patient's records. This repository supplies the inference framework for the [CuraView paper](https://arxiv.org/abs/2605.03476). [中文说明](README.zh-CN.md)
 
+[Table-by-table guide](supplement/Table_Guide.md) · [Executed example, field mapping and complete synthetic request](supplement/Executed_Example.md)
+
 ## Run the detector
 
 1. Use Python 3.12. Follow the [GraphRAG 2.7 instructions](graph/README.md) to index records you are authorized to use. Use a patient identifier such as `patient_1` for both the index and the detector.

@@ -2,6 +2,8 @@
 
 CuraView 将出院小结拆成句子，从同一患者的记录中检索证据，再判断证据能否支持每句话。[英文说明](README.md) · [论文](https://arxiv.org/abs/2605.03476)
 
+[论文逐表清单](supplement/Table_Guide.md) · [真实响应、字段转换与完整合成输入](supplement/Executed_Example.md)
+
 ## 怎样运行推理
 
 1. 使用 Python 3.12，按[构图说明](graph/README.md)为有权处理的记录建立 GraphRAG 2.7 索引。建图和检测使用同一标识，例如 `patient_1`。
