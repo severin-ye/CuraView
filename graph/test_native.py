@@ -38,6 +38,8 @@ def complete(body):
 class FakeProvider(BaseHTTPRequestHandler):
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        if self.path.endswith("/chat/completions"):
+            self.server.received_prompts.append(body["messages"][0]["content"])
         if self.path.endswith("/embeddings"):
             rows = []
             for i, value in enumerate(body["input"]):
@@ -67,6 +69,7 @@ class FakeProvider(BaseHTTPRequestHandler):
 class NativeSmokeTest(unittest.TestCase):
     def test_graphs_and_paired_comparison(self):
         with TemporaryDirectory() as temp, ThreadingHTTPServer(("127.0.0.1", 0), FakeProvider) as server:
+            server.received_prompts = []
             thread = Thread(target=server.serve_forever, daemon=True)
             thread.start()
             try:
@@ -87,6 +90,12 @@ class NativeSmokeTest(unittest.TestCase):
                 for arm in ("generic", "domain"):
                     run("graph.native", "build", "--corpus", corpus, "--out", root / arm,
                         "--arm", arm)
+                template = (Path(__file__).parent / "v33/prompts/domain.extract.txt").read_text(encoding="utf-8")
+                self.assertTrue(template.startswith("-Goal-"))
+                static_parts = template.replace("{entity_types}", "{input_text}").split("{input_text}")
+                self.assertTrue(any(all(part.strip() in prompt for part in static_parts)
+                                    for prompt in server.received_prompts),
+                                "Domain build did not send the published English template")
                 run("graph.native", "query", "--graph", root / "generic",
                     "--out", root / "query", "--text", "Where is the red token?")
                 native = json.loads((root / "query" / "context.json").read_text(encoding="utf-8"))

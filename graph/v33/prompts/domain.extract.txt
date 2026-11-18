@@ -1,45 +1,45 @@
--目标-
-从当前患者的输入文本忠实抽取医学图谱；保留原文明说的事实，包括正常检查、单项化验、否定、不确定判断和治疗，不进行医学常识补全。
+-Goal-
+Faithfully extract a medical graph from the current patient's input text; retain facts explicitly stated in the source, including normal examinations, individual laboratory tests, negations, uncertain assessments and treatments, without filling gaps using medical common knowledge.
 
--规则优先级-
-本文件的规则和示例一致适用；只允许下列15类，输入变量entity_types仅作配置一致性检查，不授权其他类别。
-PATIENT, CLINICAL_EVENT, EXAMINATION, IMAGING_FINDING, ANATOMICAL_SITE, DISEASE, SYMPTOM, MEASUREMENT, CLINICAL_IMPRESSION, TIMEPOINT, DEMOGRAPHIC_ATTRIBUTE, LAB_TEST, LAB_RESULT, TREATMENT, PROCEDURE。
-LAB_TEST和LAB_RESULT仅用于输入明确出现的化验；TREATMENT和PROCEDURE仅用于输入明确出现的治疗或操作；这些类别属于已列出的允许范围，没有额外类别例外。
+-Rule Priority-
+The rules and examples in this file apply consistently; only the following 15 types are permitted. The input variable entity_types serves only to check configuration consistency and does not authorize other types.
+PATIENT, CLINICAL_EVENT, EXAMINATION, IMAGING_FINDING, ANATOMICAL_SITE, DISEASE, SYMPTOM, MEASUREMENT, CLINICAL_IMPRESSION, TIMEPOINT, DEMOGRAPHIC_ATTRIBUTE, LAB_TEST, LAB_RESULT, TREATMENT, PROCEDURE.
+LAB_TEST and LAB_RESULT are used only for laboratory tests explicitly present in the input; TREATMENT and PROCEDURE are used only for treatments or procedures explicitly present in the input. These types are within the listed permitted scope, with no exception allowing additional types.
 
--来源与完整性-
-1. 所有内容只依据Input；保留正常值与异常值，不因正常、常见或单项而省略。
-2. 数值、单位、日期、药物剂量不得猜测；没有单位时明确记录“原文未提供单位”，没有时间时明确记录“原文未提供时间”，不得新建虚构TIMEPOINT。
-3. 区分原文的肯定、否定和不确定；关系描述必须明确写“存在”“否认/未见”或“不确定”，不能仅靠strength编码否定。
-4. 关系strength只表示原文关联的明确程度，不表示肯定或否定；明确否定也是明确的原文证据。
-5. 原文患者ID存在时使用该ID，不存在时使用INPUT_PATIENT作为当前输入的局部锚点并说明未提供ID；不得跨输入合并患者。
-6. 每个关系的source和target必须在本次输出中完整声明entity，包括其允许类别与来源描述；先声明再引用。
-7. 每个医学实体应通过原文明示关系连接患者、临床事件或检查；局部患者归属可以由“当前病历记载”表达，不推断额外临床因果。
-8. 疾病、症状、影像发现和临床印象分别归类；同义名称可归一，但描述保留原文称谓、否定和不确定修饰。
-9. 每项明确出现的化验建立LAB_TEST，化验数值建立LAB_RESULT，并将每个LAB_RESULT连接到对应的LAB_TEST；同项目不同时间的结果分开。化验块表头的时间只有在同一块的原始排版无歧义地表明结果及续行归属时，才适用于该块的结果。此时，对每个LAB_RESULT及其对应的独立LAB_TEST实例，必须分别建立LAB_RESULT→TIMEPOINT和LAB_TEST→TIMEPOINT两条直接关系，二者指向匹配的表头TIMEPOINT；不能只建其中一条，不能用PATIENT→TIMEPOINT或经LAB_TEST的两跳路径代替LAB_RESULT的直接时间关系。两条关系描述均必须写“recorded with header time”并保留原文时间短语，只表示随表头时间记载。表头没有明说时间性质时，相关LAB_RESULT、LAB_TEST和TIMEPOINT的entity_description，以及上述两条直接时间关系的relationship_description，均必须逐字包含“时间性质未定义（原文仅给出表头记载时间）”，不得推定为采样、采集、检测或测量时间；不补全日历日期或时区。时间继承到下一表头或块边界即停止，不跨块沿用。表头时间缺失时记录“原文未提供时间”，归属有歧义时记录“原文时间归属不明确”；不猜测，不建立该结果或检测实例到TIMEPOINT的关联，不新建虚构TIMEPOINT。
-10. MEASUREMENT用于非化验的定量测量，LAB_RESULT用于化验结果；保留每个明确数值、原单位和测量归属，不因相同数值合并不同项目或时间。同项目、同数值出现在不同化验块时，各块的LAB_RESULT和对应独立LAB_TEST实例均保持身份分开；实体ID或名称使用可区分的块或实例标记，描述保留原文措辞，并说明这些标记仅用于区分图谱实例，不是原文医学事实。时间关联不授权补写单位，单位缺失时仍记录“原文未提供单位”。数值旁的*或其他符号，原文未定义其含义时必须原样保留，并说明符号含义未定义；不得据此解释为异常、高低值、疾病或临床判断。只有原文明示符号含义时才保留该明示含义，不用医学常识补全。
-11. TREATMENT可以表示原文药物或其他治疗，描述保留剂量和频次；PROCEDURE用于明确操作，不把建议治疗写成已执行。
-12. 人口学实体表达具体取值，并从患者以明确维度关系连接；它不授权医学因果推断。
-13. 实体和关系描述保留可对应Input的原文短语及明确状态，省略无来源解释。
+-Provenance and Completeness-
+1. Base all content solely on Input; retain both normal and abnormal values, without omission because an item is normal, common or an individual test.
+2. Do not guess values, units, dates or medication doses. When a unit is absent, explicitly record "the source does not provide a unit"; when time is absent, explicitly record "the source does not provide a time". Do not create fictitious TIMEPOINT entities.
+3. Distinguish affirmation, negation and uncertainty in the source. Relationship descriptions must explicitly state "present", "denied/not observed" or "uncertain"; do not encode negation solely through strength.
+4. Relationship strength indicates only how explicit the source association is, not affirmation or negation; explicit negation is also explicit source evidence.
+5. Use the patient's ID when it is present in the source; otherwise use INPUT_PATIENT as a local anchor for the current input and state that no ID was provided. Do not merge patients across inputs.
+6. Each relationship's source and target must be fully declared as entities in this output, including their permitted types and source descriptions; declare before referencing.
+7. Each medical entity should connect to the patient, a clinical event or an examination through a relationship explicitly stated in the source. Local patient attribution may be expressed as "recorded in the current medical record", without inferring additional clinical causality.
+8. Classify diseases, symptoms, imaging findings and clinical impressions separately. Synonymous names may be normalized, but descriptions must retain the source terms and modifiers of negation and uncertainty.
+9. Create a LAB_TEST for each explicitly present laboratory test, a LAB_RESULT for its laboratory value, and connect each LAB_RESULT to the corresponding LAB_TEST; keep results for the same item at different times separate. The time in a laboratory block's header applies to that block's results only when the original formatting of the same block unambiguously establishes the attribution of results and continuation lines. In that case, for each LAB_RESULT and its corresponding separate LAB_TEST instance, create both direct relationships LAB_RESULT→TIMEPOINT and LAB_TEST→TIMEPOINT, each pointing to the matching header TIMEPOINT. Do not create only one of them, and do not substitute PATIENT→TIMEPOINT or a two-hop path through LAB_TEST for the LAB_RESULT's direct temporal relationship. Both relationship descriptions must contain "recorded with header time" and retain the original time phrase, indicating only that the item was recorded with the header time. When the header does not explicitly state the nature of the time, the entity_description of the relevant LAB_RESULT, LAB_TEST and TIMEPOINT, and the relationship_description of both direct temporal relationships above, must all contain verbatim "time type undefined (the source provides only the time recorded in the header)". Do not infer that it is the sampling, collection, testing or measurement time; do not supply calendar dates or time zones. Time inheritance stops at the next header or block boundary and must not carry across blocks. If header time is missing, record "the source does not provide a time"; if attribution is ambiguous, record "the source time attribution is unclear". Do not guess, do not link that result or test instance to TIMEPOINT, and do not create a fictitious TIMEPOINT.
+10. Use MEASUREMENT for non-laboratory quantitative measurements and LAB_RESULT for laboratory results. Retain each explicit value, original unit and measurement attribution; do not merge different items or times because they have the same value. If the same item and value occur in different laboratory blocks, keep each block's LAB_RESULT and corresponding separate LAB_TEST instance distinct. Use distinguishable block or instance markers in entity IDs or names, retain source wording in descriptions, and explain that these markers distinguish graph instances only and are not medical facts stated in the source. Temporal associations do not authorize supplying units; when a unit is missing, still record "the source does not provide a unit". Preserve verbatim any * or other symbol beside a value when the source does not define its meaning, and state that the symbol's meaning is undefined. Do not interpret it as an abnormality, high/low value, disease or clinical assessment. Retain an explicitly stated symbol meaning only when the source provides it; do not fill it in using medical common knowledge.
+11. TREATMENT may represent medications or other treatments in the source; descriptions must retain doses and frequencies. Use PROCEDURE for explicit procedures, without representing recommended treatment as already performed.
+12. Demographic entities express specific values and connect from the patient through relationships with explicit dimensions; this does not authorize medical causal inference.
+13. Entity and relationship descriptions must retain source phrases traceable to Input and explicit states, omitting explanations without provenance.
 
--输出格式-
-仅输出以下元组，不输出Markdown、解释或JSON。
+-Output Format-
+Output only the following tuples, without Markdown, explanations or JSON.
 ("entity"<|><entity_name><|><entity_type><|><entity_description>)
 ("relationship"<|><source_entity><|><target_entity><|><relationship_description><|><relationship_strength>)
-不同记录以##分隔，结束写<|COMPLETE|>。
+Separate records with ## and end with <|COMPLETE|>.
 
--完整示例-
+-Complete Example-
 Input: Patient P1 denies fever. Sodium 138; unit and test time are not stated.
 Output:
-("entity"<|>P1<|>PATIENT<|>原文患者P1)
-##("entity"<|>FEVER<|>SYMPTOM<|>原文fever，患者否认)
-##("entity"<|>SODIUM_TEST<|>LAB_TEST<|>原文Sodium，单项化验)
-##("entity"<|>SODIUM_RESULT_138<|>LAB_RESULT<|>原文Sodium 138，未提供单位或检测时间，不推断正常范围)
-##("relationship"<|>P1<|>FEVER<|>原文denies fever，明确否认<|>10)
-##("relationship"<|>P1<|>SODIUM_TEST<|>当前病历记载Sodium化验<|>10)
-##("relationship"<|>SODIUM_TEST<|>SODIUM_RESULT_138<|>原文化验值138，未提供单位或时间<|>10)
+("entity"<|>P1<|>PATIENT<|>Patient P1 in the source)
+##("entity"<|>FEVER<|>SYMPTOM<|>fever in the source, denied by the patient)
+##("entity"<|>SODIUM_TEST<|>LAB_TEST<|>Sodium in the source, individual laboratory test)
+##("entity"<|>SODIUM_RESULT_138<|>LAB_RESULT<|>Sodium 138 in the source; unit and test time not provided; no normal range inferred)
+##("relationship"<|>P1<|>FEVER<|>denies fever in the source, explicit denial<|>10)
+##("relationship"<|>P1<|>SODIUM_TEST<|>Sodium test recorded in the current medical record<|>10)
+##("relationship"<|>SODIUM_TEST<|>SODIUM_RESULT_138<|>Laboratory value 138 in the source; unit or time not provided<|>10)
 <|COMPLETE|>
 
--实际输入-
+-Actual Input-
 entity_types: {entity_types}
 Input:
 {input_text}
