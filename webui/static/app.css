@@ -1,0 +1,21 @@
+:root {
+  color: #352b25;
+  background: #f9f4ed;
+  font: 1rem/1.5 system-ui, sans-serif;
+}
+body { margin: 0; }
+header { display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: center; border-bottom: 1px solid #dfd0be; padding: 1rem clamp(1rem, 5vw, 4rem); }
+a { color: #6d3e21; }
+.brand { font-weight: 800; text-decoration: none; letter-spacing: .04em; }
+nav { display: flex; flex-wrap: wrap; gap: 1rem; }
+[aria-current] { text-decoration-thickness: .17em; }
+main { width: min(calc(100% - 2rem), 52rem); margin: 2rem auto 4rem; }
+form { padding: 1.25rem; display: grid; gap: .75rem; border: 1px solid #dfd0be; border-radius: .6rem; background: #fffdf8; }
+label { font-weight: 650; }
+input, textarea, button { font: inherit; box-sizing: border-box; padding: .6rem .75rem; border-radius: .35rem; }
+input, textarea { width: 100%; border: 1px solid #867466; background: #fff; color: inherit; }
+textarea { resize: vertical; }
+button { justify-self: start; cursor: pointer; border: 1px solid transparent; background: #76411e; color: #fff; }
+button:disabled { opacity: .65; cursor: wait; }
+:focus-visible { outline: .2rem solid #8a4c23; outline-offset: .16rem; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 1rem; border-radius: .4rem; background: #efe4d5; max-height: 32rem; overflow: auto; }

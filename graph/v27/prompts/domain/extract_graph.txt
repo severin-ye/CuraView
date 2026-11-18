@@ -1,0 +1,209 @@
+-目标-
+给定一份临床或医学文本（例如：电子病历 EHR、影像报告、出院小结），
+抽取一个在医学语义上连贯、结构上可推理的医学知识图谱，
+用于支持临床推理、时间序列分析以及幻觉审查（hallucination auditing）。
+
+本任务的目标不是总结文本，
+而是忠实地将医学事实、临床判断及其逻辑关系进行结构化表达。
+
+######################
+-核心原则（必须严格遵守）-
+######################
+
+1. 连通性原则（禁止漂浮节点）
+每一个被抽取的实体，必须直接或间接连接到至少一个“锚点实体”：
+- 病人（PATIENT）
+- 临床事件（CLINICAL_EVENT）
+- 检查（EXAMINATION）
+
+任何无法合理连接到上述锚点的实体，必须禁止抽取。
+
+2. 医学概念归一化原则（Canonicalization）
+当多个表述指向同一个底层疾病或医学概念时：
+- 只能生成一个规范化的疾病实体（DISEASE）
+- 疾病的严重程度、阶段、修饰语、病程等
+  不得生成新的疾病实体，而应通过关系或临床判断表达
+
+3. 否定信息处理原则（Negation Handling）
+否定或正常描述（如“无水肿”“未见异常”）：
+- 不得作为独立实体存在
+- 必须通过低强度关系（1–2）表达为“明确排除”或“未观察到”
+
+4. 时间主干原则（Temporal Spine）
+当同一项化验或测量在多个时间点出现时：
+- 只能有一个 LAB_TEST 实体
+- 每一个数值必须是独立的 LAB_RESULT
+- 每一个 LAB_RESULT 必须连接到明确的 TIMEPOINT
+
+5. 类型化关系原则（Typed Relations）
+关系描述必须：
+- 简短
+- 可复用
+- 语义稳定
+禁止使用冗长叙述性、不可归一的自然语言关系文本。
+
+######################
+-实体类型（仅允许使用以下类型）-
+######################
+
+[
+PATIENT                  # 病人实体；对应 subject_id，是整张图谱的最终语义锚点，所有信息必须可追溯到某个病人
+
+CLINICAL_EVENT           # 临床事件实体；用于表示一次急诊留观（stay_id）、一次分诊或一次检查事件，是时间和上下文的核心骨架
+
+EXAMINATION              # 检查实体；表示具体的检查过程（如肝胆超声、体格检查），承载影像/体检/流程级信息，而不是结果本身
+
+IMAGING_FINDING          # 影像学发现实体；仅用于放射或影像中“被观察到的客观异常或状态”，如中等量腹水、结节样回声
+
+ANATOMICAL_SITE          # 解剖部位实体；用于承载发现或测量所发生的具体解剖位置，如肝脏、腹腔、门静脉，避免语义悬空
+
+DISEASE                  # 疾病实体；表示诊断层概念（如 ICD 诊断或明确疾病），不得用于影像发现或症状本身
+
+SYMPTOM                  # 症状实体；仅来源于主诉或病史（chief complaint / indication），如腹胀、腹痛，不得用于影像或诊断词
+
+MEASUREMENT              # 定量测量实体；仅表示“数值 + 单位”，如 3.3×2.7 cm、血压 116/88，不表示检测项目或诊断
+
+CLINICAL_IMPRESSION      # 临床判断实体；用于表示医生或放射科医师的主观判断或印象（如 IMPRESSION），不等价于最终诊断
+
+TIMEPOINT                # 时间点实体；用于表示事件、测量或检查发生的具体时间（如入院时间、检查时间），支撑时间序列推理
+
+DEMOGRAPHIC_ATTRIBUTE    # 表示病人的具体人口学取值（如 Female、Male、White 等）；人口学维度（如性别、种族）不得作为实体节点，而必须以具体人口学维度的关系形式从 Patient 指向该实体。该实体仅用于病人背景描述，不得参与任何医学推理或扩展医学子图。
+
+]
+######################
+-实体类型使用约束（必须严格遵守）-
+######################
+
+Do NOT introduce any entity types other than those listed above.
+
+Only introduce additional entity types (e.g., LAB_TEST, LAB_RESULT, TREATMENT, PROCEDURE)
+if and only if the input text explicitly contains laboratory results,
+treatments, or medical procedures.
+
+######################
+-实体归一化细则（必须严格遵守）-
+######################
+
+6. LAB_TEST 归一化原则（Laboratory Test Canonicalization）
+
+LAB_TEST 实体必须表示"检查类型"或"检查项目组"，而非"具体化验指标名称"。
+
+✓ 正确的 LAB_TEST 实体：
+  - 血常规检测
+  - 肝功能检测
+  - 肾功能检测
+  - 血电解质检测
+  - 尿液分析
+  - 凝血功能检测
+  - 甲状腺功能检测
+
+✗ 禁止的 LAB_TEST 实体（这些是指标名称，不是检查类型）：
+  - WBC, RBC, HGB, HCT, PLT（这些属于血常规）
+  - GLUCOSE, SODIUM, POTASSIUM, CHLORIDE（这些属于电解质或代谢检测）
+  - ALT, AST, ALK PHOS, BILIRUBIN（这些属于肝功能）
+  - CREAT, UREA N, BUN（这些属于肾功能）
+
+处理规则：
+
+a) 当文本包含多个化验指标时（如 WBC、RBC、Hgb 和 Hct）：
+   - 生成一个归类的 LAB_TEST 实体（如"血常规检测"）
+   - 仅对临床关键或异常的指标生成 LAB_RESULT 实体
+   - 正常范围内的常规指标不生成独立的 LAB_RESULT
+
+b) 禁止行为：
+   - ❌ 为每个化验指标名称创建独立的 LAB_TEST 实体
+   - ❌ 将 单项葡萄糖化验记载拆分为 LAB_TEST(GLUCOSE) 和独立的 LAB_RESULT 数值
+   - ❌ 创建如 "GLUCOSE 检测"、"SODIUM 检测" 这样的单指标 LAB_TEST
+
+c) 分组参考：
+   - 血常规：WBC, RBC, HGB, HCT, MCV, MCH, MCHC, PLT, RDW
+   - 肝功能：ALT, AST, ALK PHOS, BILIRUBIN, ALBUMIN, GGT
+   - 肾功能：CREAT, UREA N, BUN, GFR
+   - 电解质：SODIUM, POTASSIUM, CHLORIDE, BICARBONATE, ANION GAP
+   - 凝血功能：PT, PTT, INR
+   - 代谢指标：GLUCOSE, LACTATE, LIPASE
+
+7. 病人实体唯一性原则（Patient Entity Uniqueness）
+
+整个病历文本只能生成且必须生成唯一一个 PATIENT 实体。
+
+✓ 正确：
+  - 只有一个 PATIENT 实体，名称为"患者"或"病人"
+  - 所有临床信息都直接或间接连接到这个唯一的 PATIENT
+
+✗ 禁止：
+  - 出现多个 PATIENT 实体（如 PATIENT_1, PATIENT_2, 患者, PATIENT）
+  - 为同一个病人创建不同语言版本的实体
+  - 为不同章节的病历内容创建不同的 PATIENT 实体
+
+处理规则：
+a) 在开始提取时，首先创建唯一的 PATIENT 实体
+b) 后续所有实体必须能够通过关系链追溯到这个 PATIENT
+c) 如果文本中有多个称谓（如 "Mr. ___", "患者", "病人"），统一使用"患者"作为实体名称
+d) 人口学信息（性别、种族、年龄）通过关系连接到 PATIENT，而不是创建多个患者实体
+
+8. 语言统一原则（Language Consistency）
+
+全文实体命名必须统一使用中文。英文原文仅在 description 字段中保留。
+
+✓ 正确：
+  实体名称：高脂血症、高血压、糖尿病、恶心、呕吐
+  描述字段：可包含英文原文 "Hyperlipidemia"
+
+✗ 禁止：
+  - 同一概念生成中英文两个实体（如"高脂血症"和"HYPERLIPIDEMIA")
+  - 实体名称使用英文（如 "DEPRESSION", "HYPERTENSION"）
+  - 混合使用中英文（如 "高脂 LIPIDEMIA"）
+
+处理规则：
+a) 疾病名称：统一翻译为中文医学术语
+   - DEPRESSION → 抑郁症
+   - HYPERLIPIDEMIA → 高脂血症
+   - HYSTERECTOMY → 子宫切除术
+   - CARCINOID → 类癌
+
+b) 症状名称：统一使用中文
+   - nausea → 恶心
+   - vomiting → 呕吐
+   - cough → 咳嗽
+   - dysphagia → 吞咽困难
+
+c) 化验和检查：使用中文描述性名称
+   - EGD → 上消化道内镜检查
+   - CXR → 胸部X线检查
+   - CT abdomen → 腹部CT检查
+
+d) 保留英文的场景：
+   - 在实体的 description 字段中保留原文
+   - 药物通用名（如 Omeprazole）可在描述中保留
+
+######################
+-输出格式（必须严格遵守）-
+######################
+
+实体格式：
+("entity"{tuple_delimiter}<实体名称>{tuple_delimiter}<实体类型>{tuple_delimiter}<实体描述>)
+
+关系格式：
+("relationship"{tuple_delimiter}<源实体>{tuple_delimiter}<目标实体>{tuple_delimiter}<关系描述>{tuple_delimiter}<关系强度>)
+
+关系描述必须使用**简短、规范、可复用的短语**，
+例如：
+- “影像发现”
+- “支持诊断”
+- “位于”
+- “测量结果”
+- “发生于”
+
+使用 {record_delimiter} 分隔实体与关系。
+任务结束时只能输出 {completion_delimiter}。
+
+######################
+-真实输入-
+######################
+Entity_types: {entity_types}
+Text: {input_text}
+######################
+输出：
+{completion_delimiter}
+

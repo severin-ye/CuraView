@@ -1,0 +1,39 @@
+detection:
+  async_graphrag: true
+  enable_batch_processing: true
+  max_concurrent_queries: 5
+  max_workers: 1
+  min_sentence_length: 10
+  parallel_detection: false
+  parallel_redetection: false
+  timeout_per_detection: 60
+display:
+  save_progress_summary: true
+  show_progress_bar: true
+  show_time_estimate: true
+graphrag:
+  community_level: 2
+  default_patient_id: patient_2
+  project_root: ../runs/graph-v27
+  query_method: local
+  response_type: Multiple Paragraphs
+llm:
+  api:
+    api_key: ${GRAPHRAG_API_KEY}
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    max_tokens: 2000
+    model: qwen-plus
+    provider: qwen
+    temperature: 0.3
+  local:
+    device_map: auto
+    max_tokens: 2000
+    model_path: ./path-to-local-model
+    temperature: 0.3
+    torch_dtype: bfloat16
+    trust_remote_code: false
+  mode: api
+output:
+  base_dir: ./outputs
+  log_level: INFO
+  save_to_file: true

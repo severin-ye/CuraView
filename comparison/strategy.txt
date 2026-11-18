@@ -1,0 +1,1 @@
+Judge only fidelity to the supplied patient evidence under the protected protocol. Preserve the specific report, specimen and encounter scope. Cite only the supplied evidence IDs. Do not invent missing facts or treat silence as contradiction.

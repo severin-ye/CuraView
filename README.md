@@ -1,54 +1,26 @@
-# CuraView
+# CuraView inference framework
 
-**Code release for the paper "CuraView: A Multi-Agent Framework for Medical Hallucination Detection with GraphRAG-Enhanced Knowledge Verification"**
+CuraView checks each sentence in a discharge summary against evidence from the same patient's records. This repository supplies the inference framework for the [CuraView paper](https://arxiv.org/abs/2605.03476). [中文说明](README.zh-CN.md)
 
-> Code is being organized for public release — please watch this repository for updates.
+## Run the detector
 
-[![arXiv](https://img.shields.io/badge/arXiv-2605.03476-b31b1b.svg)](https://arxiv.org/abs/2605.03476)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/)
+1. Use Python 3.12. Follow the [GraphRAG 2.7 instructions](graph/README.md) to index records you are authorized to use. Use a patient identifier such as `patient_1` for both the index and the detector.
+2. Install the [detector dependencies](detection/requirements.txt) and configure the index and model in the [detector settings](detection/config.yaml). Model-backed runs need an authorized endpoint or a compatible local model. Keep patient inputs and runtime traces private.
+3. Run `python detection/detect.py /path/to/summary.txt --patient-id patient_1`. The [detector guide](detection/README.md) explains the evidence grades, prompts, output fields and handling of failed judgments.
 
----
+## Check the implementation
 
-## Overview
+| Paper component | Public implementation and check |
+|---|---|
+| Patient-specific graph and evidence retrieval | [Index, query and input formats](graph/README.md) |
+| Sentence-level judgment | [Prompts](detection/doc/prompts/), [output validation](detection/curaview/_03_detection/parsing/output_contract.py), [offline detector example](detection/smoke_test.py) |
+| Flat, Generic and Domain retrieval with a fixed detector | [Three-condition comparison](comparison/README.md) and [GraphRAG 3.3 loopback integration test](graph/test_native.py). Use a separate 3.3 environment for this workflow. |
+| Scoring detector predictions | [Scorer and four-sentence example](evaluation/README.md) |
+| Inspect local results | [Web interface](webui/README.md) |
 
-CuraView is a knowledge-based multi-agent framework for sentence-level medical hallucination detection in discharge summaries. It formulates hallucination detection as patient-grounded claim verification rather than generic factuality evaluation, using GraphRAG-enhanced evidence retrieval and structured evidence grading (E1--E4).
+Run `python evaluation/synthetic_check.py` for a standard-library check with four invented sentences. With the detector environment installed, run `python detection/smoke_test.py` to check evidence handling and structured output with a simulated model.
 
-### Key Contributions
-
-- **Patient-grounded formulation**: Sentence-level claim verification against patient-specific EHR evidence with E1--E4 evidence grading
-- **Seven-type clinical hallucination taxonomy**: Diagnosis, medication, examination/laboratory, temporal, numerical, negation, and fabricated-fact errors
-- **GraphRAG-based knowledge representation**: Per-patient knowledge graphs from heterogeneous EHR sources with domain-customized graph construction
-- **Multi-agent pipeline**: Generation--detection--curation workflow producing evidence-annotated hallucination data for fine-tuning local verifiers
-
-### System Pipeline
-
-```
-Evidence Preparation -> Knowledge Graph Construction -> Hallucination Generation
-       -> Evidence-Grounded Detection -> Data Curation -> Curated Fine-Tuning
-```
-
----
-
-## Repository Status
-
-**Code is being organized for public release.** The full source code will include:
-
-- **LangChain-based multi-agent framework** for hallucination generation and detection
-- **GraphRAG** indexing and medical prompt templates
-- **Meditron-7B** generation and detection wrappers
-- **MS-SWIFT** training, merging, quantization, and inference utilities
-- **EHR data processing toolchain** for MIMIC-IV/Discharge-Me
-
----
-
-## Dataset
-
-The CuraView-EVD (Evidence-Annotated Dataset) is available at a separate repository:
-
-- **[CuraView-EVD](https://github.com/severin-ye/CuraView-EVD)** — Evidence-annotated clinical hallucination dataset (coming soon)
-
----
+The paper describes the verifier's training method and hyperparameters. This release distributes inference code, settings, prompt templates and synthetic checks. Training and curation code, training logs, checkpoints, and study data are outside the release. Reproducing the clinical performance tables requires the corresponding historical inputs and model.
 
 ## Citation
 
@@ -68,12 +40,4 @@ The CuraView-EVD (Evidence-Annotated Dataset) is available at a separate reposit
 
 ## License
 
-MIT License
-
----
-
-## Contact
-
-- **Project Lead**: Severin Ye
-- **GitHub**: [@severin-ye](https://github.com/severin-ye)
-- **Email**: [6severin9@gmail.com](mailto:6severin9@gmail.com)
+The project code is distributed under the [MIT License](LICENSE). Separately obtained models, datasets and upstream dependencies retain their own terms.

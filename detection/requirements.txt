@@ -1,0 +1,12 @@
+# Use Python 3.12 for this standalone GraphRAG 2.7 environment.
+graphrag==2.7.0
+langchain==1.2.0
+langgraph==1.0.10
+langgraph-prebuilt==1.0.8
+langchain-openai==1.1.9
+httpx==0.28.1
+pandas==2.3.3
+pyarrow==22.0.0
+pydantic>=2,<3
+PyYAML>=6,<7
+psutil>=6,<8

@@ -1,0 +1,1 @@
+"""Public CuraView sentence detector."""
